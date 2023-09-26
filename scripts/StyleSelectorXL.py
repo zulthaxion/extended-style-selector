@@ -1,4 +1,6 @@
+from __future__ import annotations
 import contextlib
+import pathlib
 
 import gradio as gr
 from modules import scripts, shared, script_callbacks
@@ -14,7 +16,19 @@ try:
 except ImportError:
     SD_DYNAMIC_PROMPTS_INSTALLED = False
 
-stylespath = ""
+
+class StyleFile:
+    def __init__(self, path: pathlib.Path, names: list[str]):
+        self.file_path = path
+        self.style_names = names
+
+
+def load_style_files() -> dict[str, StyleFile]:
+    style_files = dict()
+    for json_path in pathlib.Path(scripts.basedir()).glob("*.json"):
+        json_data = get_json_content(json_path)
+        style_files[json_path.stem] = StyleFile(json_path, read_sdxl_styles(json_data))
+    return style_files
 
 
 def get_json_content(file_path):
@@ -46,17 +60,8 @@ def read_sdxl_styles(json_data):
     return names
 
 
-def get_styles():
-    global stylespath
-    json_path = os.path.join(scripts.basedir(), "sdxl_styles.json")
-    stylespath = json_path
+def create_positive(style, positive, json_path: pathlib.Path):
     json_data = get_json_content(json_path)
-    styles = read_sdxl_styles(json_data)
-    return styles
-
-
-def create_positive(style, positive):
-    json_data = get_json_content(stylespath)
     try:
         # Check if json_data is a list
         if not isinstance(json_data, list):
@@ -80,8 +85,8 @@ def create_positive(style, positive):
         print(f"An error occurred: {str(e)}")
 
 
-def create_negative(style, negative):
-    json_data = get_json_content(stylespath)
+def create_negative(style, negative, json_path: pathlib.Path):
+    json_data = get_json_content(json_path)
     try:
         # Check if json_data is a list
         if not isinstance(json_data, list):
@@ -114,7 +119,8 @@ def create_negative(style, negative):
 
 
 class StyleSelectorXL(scripts.Script):
-    style_names = get_styles()
+    style_files = load_style_files()
+    current_style_file = "sdxl_styles"
 
     def __init__(self) -> None:
         super().__init__()
@@ -125,8 +131,12 @@ class StyleSelectorXL(scripts.Script):
     def show(self, is_img2img):
         return scripts.AlwaysVisible
 
+    def current_style_names(self) -> list[str]:
+        return self.style_files[self.current_style_file].style_names
+
     def ui(self, is_img2img):
         enabled = getattr(shared.opts, "enable_styleselector_by_default", True)
+        style_names = self.current_style_names()
         with gr.Group():
             with gr.Accordion("Extended Style Selector", open=False):
                 if SD_DYNAMIC_PROMPTS_INSTALLED:
@@ -153,6 +163,17 @@ class StyleSelectorXL(scripts.Script):
                             label="Randomize For Each Iteration",
                             info="every prompt in batch will have a random style",
                         )
+                style_file_names = list(self.style_files.keys())
+                first_file_name = ""
+                if style_file_names:
+                    first_file_name = style_file_names[0]
+
+                style_files = gr.Dropdown(
+                    choices=style_file_names,
+                    value=first_file_name,
+                    multiselect=False,
+                    label="Select Style File",
+                )
 
                 with FormRow():
                     with FormColumn(min_width=160):
@@ -160,58 +181,76 @@ class StyleSelectorXL(scripts.Script):
                             value=False,
                             label="Generate All Styles In Order",
                             info=f"to generate your prompt in all available styles, "
-                            f"set batch count to {len(self.style_names)} (style count)",
+                            f"set batch count to {len(style_names)} (style count)",
                         )
 
                 style_ui_type = shared.opts.data.get("styles_ui", "radio-buttons")
-
                 if style_ui_type == "select-list":
                     style = gr.Dropdown(
-                        self.style_names,
+                        style_names,
                         value="base",
                         multiselect=False,
                         label="Select Style",
                     )
                 else:
-                    style = gr.Radio(
-                        label="Style", choices=self.style_names, value="base"
-                    )
-
+                    style = gr.Radio(label="Style", choices=style_names, value="base")
+                style_files.change(
+                    self.on_change_style_file, inputs=[style_files], outputs=[style]
+                )
         # Ignore the error if the attribute is not present
 
-        return [is_enabled, randomize, randomize_each, all_styles, style]
+        return [is_enabled, randomize, randomize_each, all_styles, style_files, style]
 
-    def process(self, p, is_enabled, randomize, randomize_each, all_styles, style):
+    def on_change_style_file(self, file_name):
+        self.current_style_file = file_name
+        style_names = self.style_files[file_name].style_names
+        try:
+            default = style_names[0]
+        except IndexError:
+            default = ""
+        return gr.Dropdown.update(choices=style_names, value=default)
+
+    def process(
+        self, p, is_enabled, randomize, randomize_each, all_styles, style_files, style
+    ):
         if not is_enabled:
             return
+        style_names = self.current_style_names()
+        json_path = self.style_files[self.current_style_file].file_path
+
         if randomize:
-            style = random.choice(self.style_names)
+            style = random.choice(style_names)
         batch_count = len(p.all_prompts)
 
         if batch_count == 1:
-            prompt = p.all_prompts[0]
-            p.all_prompts[0] = create_positive(style, prompt)
-            p.all_negative_prompts[0] = create_negative(style, prompt)
+            p.all_prompts[0] = create_positive(style, p.all_prompts[0], json_path)
+            p.all_negative_prompts[0] = create_negative(
+                style, p.all_negative_prompts[0], json_path
+            )
         elif batch_count > 1:
-            style_count = len(self.style_names)
+            style_count = len(style_names)
             styles = []
             for i, prompt in enumerate(p.all_prompts):
                 if all_styles:
-                    styles.append(self.style_names[i % style_count])
+                    styles.append(style_names[i % style_count])
                 elif randomize_each:
-                    styles.append(random.choice(self.style_names))
+                    styles.append(random.choice(style_names))
                 else:
                     styles.append(style)
 
             # for each image in batch
             for i, prompt in enumerate(p.all_prompts):
                 positive_prompt = create_positive(
-                    styles[i] if randomize_each or all_styles else style, prompt
+                    styles[i] if randomize_each or all_styles else style,
+                    prompt,
+                    json_path,
                 )
                 p.all_prompts[i] = positive_prompt
             for i, prompt in enumerate(p.all_negative_prompts):
                 negative_prompt = create_negative(
-                    styles[i] if randomize_each or all_styles else style, prompt
+                    styles[i] if randomize_each or all_styles else style,
+                    prompt,
+                    json_path,
                 )
                 p.all_negative_prompts[i] = negative_prompt
 

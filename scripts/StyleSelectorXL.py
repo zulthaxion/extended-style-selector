@@ -7,6 +7,13 @@ import json
 import os
 import random
 
+try:
+    import sd_dynamic_prompts
+
+    SD_DYNAMIC_PROMPTS_INSTALLED = True
+except ImportError:
+    SD_DYNAMIC_PROMPTS_INSTALLED = False
+
 stylespath = ""
 
 
@@ -122,10 +129,11 @@ class StyleSelectorXL(scripts.Script):
         enabled = getattr(shared.opts, "enable_styleselector_by_default", True)
         with gr.Group():
             with gr.Accordion("Extended Style Selector", open=False):
-                gr.HTML(
-                    '<span>Info: disable "Dynamic Prompts extension" for all style '
-                    "and randomize each iteration batch  generation!</span>"
-                )
+                if SD_DYNAMIC_PROMPTS_INSTALLED:
+                    gr.HTML(
+                        '<span>Info: "Dynamic Prompts extension" installed. Disable it when using '
+                        '"Generate All Styles In Order" or "Randomize For Each Iteration" option!</span>'
+                    )
                 with FormRow():
                     with FormColumn(min_width=160):
                         is_enabled = gr.Checkbox(

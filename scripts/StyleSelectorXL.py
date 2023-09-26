@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Mapping
 import pathlib
 
 import gradio as gr
@@ -19,10 +20,54 @@ DEFAULT_STYLE_FILE = "sd_styles.json"
 DEFAULT_STYLE = "base"
 
 
+class JSONContentError(Exception):
+    pass
+
+
+class Style:
+    def __init__(self, name: str, prompt: str, negative_prompt: str):
+        self.name = name
+        self.prompt = prompt
+        self.negative_prompt = negative_prompt
+
+    @classmethod
+    def parse(cls, item: Mapping) -> Style:
+        if not isinstance(item, Mapping):
+            raise TypeError
+        return Style(
+            name=item.get("name", ""),
+            prompt=item.get("prompt", ""),
+            negative_prompt=item.get("negative_prompt", ""),
+        )
+
+    def create_positive(self, positive: str) -> str:
+        return self.prompt.replace("{prompt}", positive)
+
+    def create_negative(self, negative: str) -> str:
+        negative_prompt = self.negative_prompt
+        if negative_prompt:
+            return f"{negative_prompt}, {negative}"
+        return negative
+
+
 class StyleFile:
     def __init__(self, json_data):
-        self.json_data = json_data
-        self.style_names: list[str] = load_style_names(json_data)
+        self.styles: dict[str, Style] = load_json_content(json_data)
+
+    def style_names(self) -> list[str]:
+        return sorted(self.styles.keys())
+
+    def create_positive(self, style_name: str, prompt: str) -> str:
+        style = self.styles.get(style_name)
+        if style:
+            return style.create_positive(prompt)
+        return prompt
+
+    def create_negative(self, style_name: str, prompt: str) -> str:
+        style = self.styles.get(style_name)
+        if style:
+            return style.create_negative(prompt)
+        return prompt
 
 
 def load_style_files() -> dict[str, StyleFile]:
@@ -33,82 +78,25 @@ def load_style_files() -> dict[str, StyleFile]:
         except (IOError, json.JSONDecodeError):
             print(f'{TITLE}: loading error, file "{json_path}" ignored')
             continue
-
-        style_files[json_path.name] = StyleFile(json_data)
+        try:
+            style_files[json_path.name] = StyleFile(json_data)
+        except JSONContentError:
+            print(f'{TITLE}: JSON parsing error, file "{json_path}" ignored')
     return style_files
 
 
-def load_style_names(json_data) -> list[str]:
-    names = []
-    # Check that data is a list
+def load_json_content(json_data: list[Mapping]) -> dict[str, Style]:
+    styles: dict[str, Style] = {}
     if not isinstance(json_data, list):
-        print("JSON file structure error: expected a list of styles")
-        return names
+        raise JSONContentError
 
     for item in json_data:
-        # Check that the item is a dictionary
-        if isinstance(item, dict):
-            name = item.get("name")
-            if name:
-                names.append(item["name"])
-    names.sort()
-    return names
-
-
-def create_positive(style, positive, json_data):
-    try:
-        # Check if json_data is a list
-        if not isinstance(json_data, list):
-            raise ValueError("Invalid JSON data. Expected a list of templates.")
-
-        for template in json_data:
-            # Check if template contains 'name' and 'prompt' fields
-            if "name" not in template or "prompt" not in template:
-                raise ValueError("Invalid template. Missing 'name' or 'prompt' field.")
-
-            # Replace {prompt} in the matching template
-            if template["name"] == style:
-                positive = template["prompt"].replace("{prompt}", positive)
-
-                return positive
-
-        # If function hasn't returned yet, no matching template was found
-        raise ValueError(f"No template found with name '{style}'.")
-
-    except Exception as e:
-        print(f"An error occurred: {str(e)}")
-
-
-def create_negative(style, negative, json_data):
-    try:
-        # Check if json_data is a list
-        if not isinstance(json_data, list):
-            raise ValueError("Invalid JSON data. Expected a list of templates.")
-
-        for template in json_data:
-            # Check if template contains 'name' and 'prompt' fields
-            if "name" not in template or "prompt" not in template:
-                raise ValueError("Invalid template. Missing 'name' or 'prompt' field.")
-
-            # Replace {prompt} in the matching template
-            if template["name"] == style:
-                json_negative_prompt = template.get("negative_prompt", "")
-                if negative:
-                    negative = (
-                        f"{json_negative_prompt}, {negative}"
-                        if json_negative_prompt
-                        else negative
-                    )
-                else:
-                    negative = json_negative_prompt
-
-                return negative
-
-        # If function hasn't returned yet, no matching template was found
-        raise ValueError(f"No template found with name '{style}'.")
-
-    except Exception as e:
-        print(f"An error occurred: {str(e)}")
+        try:
+            style = Style.parse(item)
+            styles[style.name] = style
+        except TypeError:
+            pass
+    return styles
 
 
 def get_default_style_name(style_names: list[str], default_style: str) -> str:
@@ -121,8 +109,8 @@ def get_default_style_name(style_names: list[str], default_style: str) -> str:
 
 
 class StyleSelectorXL(scripts.Script):
-    style_files = load_style_files()
-    current_style_file = DEFAULT_STYLE_FILE
+    style_files: dict[str, StyleFile] = load_style_files()
+    current_style_file: str = DEFAULT_STYLE_FILE
 
     def __init__(self) -> None:
         super().__init__()
@@ -134,7 +122,7 @@ class StyleSelectorXL(scripts.Script):
         return scripts.AlwaysVisible
 
     def current_style_names(self) -> list[str]:
-        return self.style_files[self.current_style_file].style_names
+        return self.style_files[self.current_style_file].style_names()
 
     def ui(self, is_img2img):
         enabled = getattr(shared.opts, "enable_styleselector_by_default", True)
@@ -209,8 +197,12 @@ class StyleSelectorXL(scripts.Script):
 
     def on_change_style_file(self, file_name):
         self.current_style_file = file_name
-        style_names = self.style_files[file_name].style_names
-        default_style = get_default_style_name(style_names, DEFAULT_STYLE)
+        style_names: list[str] = []
+        default_style: str = ""
+        style_file: StyleFile = self.style_files.get(file_name)
+        if style_file:
+            style_names = style_file.style_names()
+            default_style = get_default_style_name(style_names, DEFAULT_STYLE)
         return gr.Dropdown.update(choices=style_names, value=default_style)
 
     def process(
@@ -218,17 +210,20 @@ class StyleSelectorXL(scripts.Script):
     ):
         if not is_enabled:
             return
-        style_names = self.current_style_names()
-        json_data = self.style_files[self.current_style_file].json_data
+        style_file = self.style_files.get(self.current_style_file)
+        if not style_file:
+            print(f'Style file "{self.current_style_file}" not found.')
+            return
 
+        style_names = style_file.style_names()
         if randomize:
             style = random.choice(style_names)
         batch_count = len(p.all_prompts)
 
         if batch_count == 1:
-            p.all_prompts[0] = create_positive(style, p.all_prompts[0], json_data)
-            p.all_negative_prompts[0] = create_negative(
-                style, p.all_negative_prompts[0], json_data
+            p.all_prompts[0] = style_file.create_positive(style, p.all_prompts[0])
+            p.all_negative_prompts[0] = style_file.create_negative(
+                style, p.all_negative_prompts[0]
             )
         elif batch_count > 1:
             style_count = len(style_names)
@@ -243,17 +238,15 @@ class StyleSelectorXL(scripts.Script):
 
             # for each image in batch
             for i, prompt in enumerate(p.all_prompts):
-                positive_prompt = create_positive(
+                positive_prompt = style_file.create_positive(
                     styles[i] if randomize_each or all_styles else style,
                     prompt,
-                    json_data,
                 )
                 p.all_prompts[i] = positive_prompt
             for i, prompt in enumerate(p.all_negative_prompts):
-                negative_prompt = create_negative(
+                negative_prompt = style_file.create_negative(
                     styles[i] if randomize_each or all_styles else style,
                     prompt,
-                    json_data,
                 )
                 p.all_negative_prompts[i] = negative_prompt
 

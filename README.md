@@ -18,7 +18,7 @@ I added support for multiple style files.
 
 Enter this repo's URL in Automatic1111's extension tab "Install from Url":
 
-https://github.com/mozman/ExtenedStyleSelector
+https://github.com/mozman/ExtendedStyleSelector
 
 ### Usage
 

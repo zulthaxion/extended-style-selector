@@ -16,7 +16,6 @@ except ImportError:
     SD_DYNAMIC_PROMPTS_INSTALLED = False
 
 TITLE = "Extended Style Selector"
-DEFAULT_STYLE_FILE = "sd_styles.json"
 DEFAULT_STYLE = "base"
 
 
@@ -108,9 +107,16 @@ def get_default_style_name(style_names: list[str], default_style: str) -> str:
     return default_style
 
 
+def get_first_style_name(style_files) -> str:
+    try:
+        return list(style_files.keys())[0]
+    except IndexError:
+        return ""
+
+
 class StyleSelectorXL(scripts.Script):
     style_files: dict[str, StyleFile] = load_style_files()
-    current_style_file: str = DEFAULT_STYLE_FILE
+    current_style_file: str = get_first_style_name(style_files)
 
     def __init__(self) -> None:
         super().__init__()
@@ -122,11 +128,13 @@ class StyleSelectorXL(scripts.Script):
         return scripts.AlwaysVisible
 
     def current_style_names(self) -> list[str]:
-        return self.style_files[self.current_style_file].style_names()
+        style_file = self.style_files.get(self.current_style_file)
+        if style_file:
+            return style_file.style_names()
+        return []
 
     def ui(self, is_img2img):
         enabled: bool = getattr(shared.opts, "enable_styleselector_by_default", True)
-        style_names: list[str] = self.current_style_names()
         with gr.Group():
             with gr.Accordion("Extended Style Selector", open=False):
                 style_file_names = list(self.style_files.keys())
@@ -167,13 +175,14 @@ class StyleSelectorXL(scripts.Script):
                     label="Select a Style File",
                 )
 
+                style_names: list[str] = self.current_style_names()
                 with FormRow():
                     with FormColumn(min_width=160):
                         all_styles = gr.Checkbox(
                             value=False,
                             label="Generate All Styles In Order",
-                            info=f"to generate your prompt in all available styles, "
-                            f"set batch count to {len(style_names)} (style count)",
+                            info="generate your prompt in all available styles, "
+                                 "set batch count accordingly"
                         )
 
                 default_style_name = get_default_style_name(style_names, DEFAULT_STYLE)
@@ -192,7 +201,6 @@ class StyleSelectorXL(scripts.Script):
                 style_files.change(
                     self.on_change_style_file, inputs=[style_files], outputs=[style]
                 )
-        # Ignore the error if the attribute is not present
         return [is_enabled, randomize, randomize_each, all_styles, style_files, style]
 
     def on_change_style_file(self, file_name):

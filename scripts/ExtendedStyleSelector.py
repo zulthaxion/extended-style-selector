@@ -1,3 +1,5 @@
+# Copyright (C) 2023, Ali Haydar GÜLEÇ
+# License: MIT License
 from __future__ import annotations
 from typing import Mapping
 import pathlib

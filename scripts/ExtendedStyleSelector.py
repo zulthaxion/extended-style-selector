@@ -146,19 +146,16 @@ class ExtendedStyleSelector(scripts.Script):
                         is_enabled = gr.Checkbox(
                             value=False,
                             label="Enable Style Selector",
-                            info="enable or disable style selector",
                         )
                     with FormColumn(elem_id="Randomize Style"):
                         randomize = gr.Checkbox(
                             value=False,
                             label="Randomize Style",
-                            info="this overrides the selected style",
                         )
                     with FormColumn(elem_id="Randomize For Each Iteration"):
                         randomize_each = gr.Checkbox(
                             value=False,
                             label="Randomize For Each Iteration",
-                            info="every prompt in batch will have a random style",
                         )
 
                 style_files = gr.Dropdown(
@@ -174,8 +171,6 @@ class ExtendedStyleSelector(scripts.Script):
                         all_styles = gr.Checkbox(
                             value=False,
                             label="Generate All Styles In Order",
-                            info="generate your prompt in all available styles, "
-                            "set batch count accordingly",
                         )
 
                 default_style_name = get_default_style_name(style_names, DEFAULT_STYLE)

@@ -10,13 +10,6 @@ import gradio as gr
 from modules import scripts
 from modules.ui_components import FormRow, FormColumn
 
-try:
-    import sd_dynamic_prompts
-
-    SD_DYNAMIC_PROMPTS_INSTALLED = True
-except ImportError:
-    SD_DYNAMIC_PROMPTS_INSTALLED = False
-
 TITLE = "Extended Style Selector"
 DEFAULT_STYLE = "base"
 
@@ -144,11 +137,10 @@ class ExtendedStyleSelector(scripts.Script):
                 except IndexError:
                     first_file_name = ""
 
-                if SD_DYNAMIC_PROMPTS_INSTALLED:
-                    gr.HTML(
-                        '<span>Info: disable "Dynamic Prompts extension" when using '
-                        '"Generate All Styles In Order" or "Randomize For Each Iteration" option!</span>'
-                    )
+                gr.HTML(
+                    '<span>Info: disable "Dynamic Prompts" extension when using '
+                    '"Generate All Styles In Order" or "Randomize For Each Iteration" option!</span>'
+                )
                 with FormRow():
                     with FormColumn(min_width=160):
                         is_enabled = gr.Checkbox(

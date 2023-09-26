@@ -14,21 +14,21 @@ try:
 except ImportError:
     SD_DYNAMIC_PROMPTS_INSTALLED = False
 
-DEFAULT_STYLE_FILE = "sdxl_styles.json"
+DEFAULT_STYLE_FILE = "sd_styles.json"
 DEFAULT_STYLE = "base"
 
 
 class StyleFile:
-    def __init__(self, path: pathlib.Path, names: list[str]):
-        self.file_path = path
-        self.style_names = names
+    def __init__(self, json_data):
+        self.json_data = json_data
+        self.style_names: list[str] = load_sd_styles(json_data)
 
 
 def load_style_files() -> dict[str, StyleFile]:
     style_files = dict()
     for json_path in pathlib.Path(scripts.basedir()).glob("*.json"):
         json_data = get_json_content(json_path)
-        style_files[json_path.name] = StyleFile(json_path, read_sdxl_styles(json_data))
+        style_files[json_path.name] = StyleFile(json_data)
     return style_files
 
 
@@ -41,7 +41,7 @@ def get_json_content(file_path):
         print(f"A Problem occurred: {str(e)}")
 
 
-def read_sdxl_styles(json_data):
+def load_sd_styles(json_data):
     # Check that data is a list
     if not isinstance(json_data, list):
         print("Error: input data must be a list")
@@ -61,8 +61,7 @@ def read_sdxl_styles(json_data):
     return names
 
 
-def create_positive(style, positive, json_path: pathlib.Path):
-    json_data = get_json_content(json_path)
+def create_positive(style, positive, json_data):
     try:
         # Check if json_data is a list
         if not isinstance(json_data, list):
@@ -86,8 +85,7 @@ def create_positive(style, positive, json_path: pathlib.Path):
         print(f"An error occurred: {str(e)}")
 
 
-def create_negative(style, negative, json_path: pathlib.Path):
-    json_data = get_json_content(json_path)
+def create_negative(style, negative, json_data):
     try:
         # Check if json_data is a list
         if not isinstance(json_data, list):
@@ -227,16 +225,16 @@ class StyleSelectorXL(scripts.Script):
         if not is_enabled:
             return
         style_names = self.current_style_names()
-        json_path = self.style_files[self.current_style_file].file_path
+        json_data = self.style_files[self.current_style_file].json_data
 
         if randomize:
             style = random.choice(style_names)
         batch_count = len(p.all_prompts)
 
         if batch_count == 1:
-            p.all_prompts[0] = create_positive(style, p.all_prompts[0], json_path)
+            p.all_prompts[0] = create_positive(style, p.all_prompts[0], json_data)
             p.all_negative_prompts[0] = create_negative(
-                style, p.all_negative_prompts[0], json_path
+                style, p.all_negative_prompts[0], json_data
             )
         elif batch_count > 1:
             style_count = len(style_names)
@@ -254,14 +252,14 @@ class StyleSelectorXL(scripts.Script):
                 positive_prompt = create_positive(
                     styles[i] if randomize_each or all_styles else style,
                     prompt,
-                    json_path,
+                    json_data,
                 )
                 p.all_prompts[i] = positive_prompt
             for i, prompt in enumerate(p.all_negative_prompts):
                 negative_prompt = create_negative(
                     styles[i] if randomize_each or all_styles else style,
                     prompt,
-                    json_path,
+                    json_data,
                 )
                 p.all_negative_prompts[i] = negative_prompt
 

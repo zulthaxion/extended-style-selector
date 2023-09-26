@@ -145,7 +145,7 @@ class ExtendedStyleSelector(scripts.Script):
                     with FormColumn(min_width=160):
                         is_enabled = gr.Checkbox(
                             value=False,
-                            label="Enable Style Selector",
+                            label="Active",
                         )
                     with FormColumn(elem_id="Randomize Style"):
                         randomize = gr.Checkbox(

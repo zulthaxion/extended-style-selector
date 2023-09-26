@@ -1,4 +1,4 @@
-# Copyright (C) 2023, Ali Haydar GÜLEÇ
+# Copyright (C) 2023, Ali Haydar Güleç
 # License: MIT License
 from __future__ import annotations
 from typing import Mapping
@@ -28,8 +28,8 @@ class Style:
         self.prompt = prompt
         self.negative_prompt = negative_prompt
 
-    @classmethod
-    def parse(cls, item: Mapping) -> Style:
+    @staticmethod
+    def parse(item: Mapping) -> Style:
         if not isinstance(item, Mapping):
             raise TypeError
         return Style(

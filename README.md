@@ -1,18 +1,17 @@
 ## Extended Style Selector
 
-This repository contains a Automatic1111 Extension allows users to select and apply 
-different styles to their inputs using any Stable Diffusion model.
+This repository contains an Automatic1111 extension that applies styles to 
+the input prompts. The Styles are stored in one or multiple JSON files in the 
+extension directory.
 
 This extension is a fork of [Style Selector for SDXL 1.0](https://github.com/ahgsql/StyleSelectorXL.git) 
-by Ali Haydar GÜLEÇ. I renamed the extension to Extended Style Selector because it works 
-with SDXL 1.0 and any other model as well. 
+by Ali Haydar Güleç. The extension was renamed to "Extended Style Selector" because the 
+extension works with SDXL as well as with any other Stable Diffusion model (1.5 & 2.1). 
 
 ### Styles
 
-Released positive and negative templates are used to generate stylized prompts. Just 
-install extension, then styles will appear in the panel as a dropdown selector.
-
-I added support for multiple style files.
+The included style files contain positive and negative prompt templates to generate 
+stylized prompts. The extension can be used in "txt2img" and "img2img" tabs.
 
 ### Installation
 
@@ -22,19 +21,28 @@ https://github.com/mozman/ExtendedStyleSelector
 
 ### Usage
 
-Enable or disable the extension (default is disabled). 
-Write your subject into the prompt field, select a style then hit generate! The selected 
-style will be applied to the current prompt.
+Active the extension (default is disabled). 
+Write your prompts, select a style file and a style then hit generate! 
+The selected style will be applied to your prompts.
+
+### Modes
+
+The count of generated images is determined by the batch count.
+
+- **selected style for all images:** All generated images have the same style.
+- **one random style for all images:** A random style will be chosen to generate all images, 
+  the selected style is ignored.
+- **random style for each image:** All generated images have a random style.
+- **use style in order:** The styles of the selected style file are applied in ascending 
+  alphabetically order. Set batch count to the count of styles in the style file to render 
+  all styles. The rendering process cycles through all styles if there are fewer styles than 
+  images to render. 
 
 ### Thanks
 
-Thanks to Ali Haydar GÜLEÇ for creating [Style Selector for SDXL 1.0](https://github.com/ahgsql/StyleSelectorXL.git).
-
-Huge thanks for https://github.com/twri/sdxl_prompt_styler as I got style json file's 
-original structure from his repo.
-
-Thanks to [Diva](https://civitai.com/user/Diva/models) for the Art Styles Expansion file: 
-https://civitai.com/models/132426/art-styles-expansion-for-styleselectorxl?modelVersionId=145656
+- to Ali Haydar Güleç for creating [Style Selector for SDXL 1.0](https://github.com/ahgsql/StyleSelectorXL.git)
+- to https://github.com/twri/sdxl_prompt_styler for the original style json files
+- to [Diva](https://civitai.com/user/Diva/models) for the Art Styles Expansion [file](https://civitai.com/models/132426/art-styles-expansion-for-styleselectorxl?modelVersionId=145656)
 
 ### License
 

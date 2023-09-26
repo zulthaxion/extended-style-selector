@@ -11,7 +11,8 @@ with SDXL 1.0 and any other model as well.
 
 Released positive and negative templates are used to generate stylized prompts. Just 
 install extension, then styles will appear in the panel as a dropdown selector.
-I added support for multiple style files format.
+
+I added support for multiple style files.
 
 ### Installation
 

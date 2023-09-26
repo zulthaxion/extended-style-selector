@@ -1,12 +1,10 @@
 from __future__ import annotations
-import contextlib
 import pathlib
 
 import gradio as gr
 from modules import scripts, shared, script_callbacks
-from modules.ui_components import FormRow, FormColumn, FormGroup, ToolButton
+from modules.ui_components import FormRow, FormColumn
 import json
-import os
 import random
 
 try:
@@ -15,6 +13,9 @@ try:
     SD_DYNAMIC_PROMPTS_INSTALLED = True
 except ImportError:
     SD_DYNAMIC_PROMPTS_INSTALLED = False
+
+DEFAULT_STYLE_FILE = "sdxl_styles.json"
+DEFAULT_STYLE = "base"
 
 
 class StyleFile:
@@ -27,7 +28,7 @@ def load_style_files() -> dict[str, StyleFile]:
     style_files = dict()
     for json_path in pathlib.Path(scripts.basedir()).glob("*.json"):
         json_data = get_json_content(json_path)
-        style_files[json_path.stem] = StyleFile(json_path, read_sdxl_styles(json_data))
+        style_files[json_path.name] = StyleFile(json_path, read_sdxl_styles(json_data))
     return style_files
 
 
@@ -118,9 +119,18 @@ def create_negative(style, negative, json_path: pathlib.Path):
         print(f"An error occurred: {str(e)}")
 
 
+def get_default_style_name(style_names: list[str], default_style: str) -> str:
+    if default_style not in style_names:
+        try:
+            default_style = style_names[0]
+        except IndexError:
+            default_style = ""
+    return default_style
+
+
 class StyleSelectorXL(scripts.Script):
     style_files = load_style_files()
-    current_style_file = "sdxl_styles"
+    current_style_file = DEFAULT_STYLE_FILE
 
     def __init__(self) -> None:
         super().__init__()
@@ -139,9 +149,15 @@ class StyleSelectorXL(scripts.Script):
         style_names = self.current_style_names()
         with gr.Group():
             with gr.Accordion("Extended Style Selector", open=False):
+                style_file_names = list(self.style_files.keys())
+                try:
+                    first_file_name = style_file_names[0]
+                except IndexError:
+                    first_file_name = ""
+
                 if SD_DYNAMIC_PROMPTS_INSTALLED:
                     gr.HTML(
-                        '<span>Info: "Dynamic Prompts extension" installed. Disable it when using '
+                        '<span>Info: disable "Dynamic Prompts extension" when using '
                         '"Generate All Styles In Order" or "Randomize For Each Iteration" option!</span>'
                     )
                 with FormRow():
@@ -163,16 +179,12 @@ class StyleSelectorXL(scripts.Script):
                             label="Randomize For Each Iteration",
                             info="every prompt in batch will have a random style",
                         )
-                style_file_names = list(self.style_files.keys())
-                first_file_name = ""
-                if style_file_names:
-                    first_file_name = style_file_names[0]
 
                 style_files = gr.Dropdown(
                     choices=style_file_names,
                     value=first_file_name,
                     multiselect=False,
-                    label="Select Style File",
+                    label="Select a Style File",
                 )
 
                 with FormRow():
@@ -184,31 +196,30 @@ class StyleSelectorXL(scripts.Script):
                             f"set batch count to {len(style_names)} (style count)",
                         )
 
+                default_style = get_default_style_name(style_names, DEFAULT_STYLE)
                 style_ui_type = shared.opts.data.get("styles_ui", "radio-buttons")
                 if style_ui_type == "select-list":
                     style = gr.Dropdown(
                         style_names,
-                        value="base",
+                        value=default_style,
                         multiselect=False,
                         label="Select Style",
                     )
                 else:
-                    style = gr.Radio(label="Style", choices=style_names, value="base")
+                    style = gr.Radio(
+                        label="Style", choices=style_names, value=default_style
+                    )
                 style_files.change(
                     self.on_change_style_file, inputs=[style_files], outputs=[style]
                 )
         # Ignore the error if the attribute is not present
-
         return [is_enabled, randomize, randomize_each, all_styles, style_files, style]
 
     def on_change_style_file(self, file_name):
         self.current_style_file = file_name
         style_names = self.style_files[file_name].style_names
-        try:
-            default = style_names[0]
-        except IndexError:
-            default = ""
-        return gr.Dropdown.update(choices=style_names, value=default)
+        default_style = get_default_style_name(style_names, DEFAULT_STYLE)
+        return gr.Dropdown.update(choices=style_names, value=default_style)
 
     def process(
         self, p, is_enabled, randomize, randomize_each, all_styles, style_files, style

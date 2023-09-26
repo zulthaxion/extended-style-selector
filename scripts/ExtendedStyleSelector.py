@@ -183,7 +183,7 @@ class ExtendedStyleSelector(scripts.Script):
                             value=False,
                             label="Generate All Styles In Order",
                             info="generate your prompt in all available styles, "
-                                 "set batch count accordingly"
+                            "set batch count accordingly",
                         )
 
                 default_style_name = get_default_style_name(style_names, DEFAULT_STYLE)
@@ -251,3 +251,6 @@ class ExtendedStyleSelector(scripts.Script):
                     prompt,
                 )
                 p.all_negative_prompts[i] = negative_prompt
+        if p.enable_hr:
+            p.all_hr_prompts = p.all_prompts
+            p.all_hr_negative_prompts = p.all_negative_prompts

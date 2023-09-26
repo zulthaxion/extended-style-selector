@@ -109,8 +109,7 @@ def create_negative(style, negative):
 class StyleSelectorXL(scripts.Script):
     def __init__(self) -> None:
         super().__init__()
-
-    styleNames = get_styles()
+        self.style_names = get_styles()
 
     def title(self):
         return "Extended Style Selector"
@@ -148,21 +147,21 @@ class StyleSelectorXL(scripts.Script):
                             value=False,
                             label="Generate All Styles In Order",
                             info=f"to generate your prompt in all available styles, "
-                            f"set batch count to {len(self.styleNames)} (style count)",
+                            f"set batch count to {len(self.style_names)} (style count)",
                         )
 
                 style_ui_type = shared.opts.data.get("styles_ui", "radio-buttons")
 
                 if style_ui_type == "select-list":
                     style = gr.Dropdown(
-                        self.styleNames,
+                        self.style_names,
                         value="base",
                         multiselect=False,
                         label="Select Style",
                     )
                 else:
                     style = gr.Radio(
-                        label="Style", choices=self.styleNames, value="base"
+                        label="Style", choices=self.style_names, value="base"
                     )
 
         # Ignore the error if the attribute is not present
@@ -174,7 +173,7 @@ class StyleSelectorXL(scripts.Script):
             return
 
         if randomize:
-            style = random.choice(self.styleNames)
+            style = random.choice(self.style_names)
         batch_count = len(p.all_prompts)
 
         if batch_count == 1:
@@ -190,11 +189,11 @@ class StyleSelectorXL(scripts.Script):
             styles = {}
             for i, prompt in enumerate(p.all_prompts):
                 if randomize:
-                    styles[i] = random.choice(self.styleNames)
+                    styles[i] = random.choice(self.style_names)
                 else:
                     styles[i] = style
                 if all_styles:
-                    styles[i] = self.styleNames[i % len(self.styleNames)]
+                    styles[i] = self.style_names[i % len(self.style_names)]
             # for each image in batch
             for i, prompt in enumerate(p.all_prompts):
                 positive_prompt = create_positive(
@@ -210,25 +209,6 @@ class StyleSelectorXL(scripts.Script):
         p.extra_generation_params["Style Selector Enabled"] = True
         p.extra_generation_params["Style Selector Randomize"] = randomize
         p.extra_generation_params["Style Selector Style"] = style
-
-    def after_component(self, component, **kwargs):
-        # https://github.com/AUTOMATIC1111/stable-diffusion-webui/pull/7456#issuecomment-1414465888 helpful link
-        # Find the text2img textbox component
-        if kwargs.get("elem_id") == "txt2img_prompt":  # positive prompt textbox
-            self.boxx = component
-        # Find the img2img textbox component
-        if kwargs.get("elem_id") == "img2img_prompt":  # positive prompt textbox
-            self.boxxIMG = component
-
-        # this code below  works as well, you can send negative prompt text box,provided
-        # you change the code a little switch self.boxx with  self.neg_prompt_boxTXT
-        # and self.boxxIMG with self.neg_prompt_boxIMG
-
-        # if kwargs.get("elem_id") == "txt2img_neg_prompt":
-        # self.neg_prompt_boxTXT = component
-        # if kwargs.get("elem_id") == "img2img_neg_prompt":
-        # self.neg_prompt_boxIMG = component
-
 
 def on_ui_settings():
     section = ("styleselector", "Style Selector")

@@ -33,6 +33,9 @@ Thanks to Ali Haydar GÜLEÇ for creating [Style Selector for SDXL 1.0](https://
 Huge thanks for https://github.com/twri/sdxl_prompt_styler as I got style json file's 
 original structure from his repo.
 
+Thanks to [Diva](https://civitai.com/user/Diva/models) for the Art Styles Expansion file: 
+https://civitai.com/models/132426/art-styles-expansion-for-styleselectorxl?modelVersionId=145656
+
 ### License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

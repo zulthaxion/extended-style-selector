@@ -12,6 +12,10 @@ from modules.ui_components import FormRow, FormColumn
 
 TITLE = "Extended Style Selector"
 DEFAULT_STYLE = "base"
+MODE_SELECTED = "Selected Style For All Images"
+MODE_RANDOM_ONE = "One Random Style For All Images"
+MODE_RANDOM_EACH = "Random Style For Each Image"
+MODE_GENERATE_IN_ORDER = "Use Styles In Order"
 
 
 class JSONContentError(Exception):
@@ -134,53 +138,44 @@ class ExtendedStyleSelector(scripts.Script):
                 except IndexError:
                     first_file_name = ""
 
-                gr.HTML(
-                    '<span>Info: disable "Dynamic Prompts" extension when using '
-                    '"Generate All Styles In Order" or "Each Image Has a Random Style" option!</span>'
-                )
                 with FormRow():
                     with FormColumn(min_width=160):
                         is_enabled = gr.Checkbox(
                             value=False,
                             label="Active",
                         )
-                    with FormColumn(elem_id="Randomize Style"):
-                        randomize = gr.Checkbox(
-                            value=False,
-                            label="One Random Style For All Images",
-                        )
-                    with FormColumn(elem_id="Randomize For Each Iteration"):
-                        randomize_each = gr.Checkbox(
-                            value=False,
-                            label="Each Image Has a Random Style",
-                        )
-
                 style_files = gr.Dropdown(
                     choices=style_file_names,
                     value=first_file_name,
                     multiselect=False,
-                    label="Select a Style File",
+                    label="Style File",
                 )
-
                 style_names: list[str] = self.current_style_names()
-                with FormRow():
-                    with FormColumn(min_width=160):
-                        all_styles = gr.Checkbox(
-                            value=False,
-                            label="Generate All Styles In Order",
-                        )
-
                 default_style_name = get_default_style_name(style_names, DEFAULT_STYLE)
                 style = gr.Dropdown(
                     style_names,
                     value=default_style_name,
                     multiselect=False,
-                    label="Select Style",
+                    label="Style",
                 )
                 style_files.change(
                     self.on_change_style_file, inputs=[style_files], outputs=[style]
                 )
-        return [is_enabled, randomize, randomize_each, all_styles, style_files, style]
+                with FormRow():
+                    mode = gr.Radio(
+                        choices=[
+                            MODE_SELECTED,
+                            MODE_RANDOM_ONE,
+                            MODE_RANDOM_EACH,
+                            MODE_GENERATE_IN_ORDER,
+                        ],
+                        type="value",
+                        value=MODE_SELECTED,
+                        label="Batch Mode",
+                        info=f'Hint: disable "Dynamic Prompts" extension when using '
+                        f'"{MODE_GENERATE_IN_ORDER}" or "{MODE_RANDOM_EACH}" option!',
+                    )
+        return [is_enabled, mode, style_files, style]
 
     def on_change_style_file(self, file_name):
         self.current_style_file = file_name
@@ -192,15 +187,16 @@ class ExtendedStyleSelector(scripts.Script):
             default_style = get_default_style_name(style_names, DEFAULT_STYLE)
         return gr.Dropdown.update(choices=style_names, value=default_style)
 
-    def process(
-        self, p, is_enabled, randomize, randomize_each, all_styles, style_files, style
-    ):
+    def process(self, p, is_enabled, mode, style_files, style):
         if not is_enabled:
             return
         style_file: StyleFile = self.style_files.get(self.current_style_file)
         if not style_file:
             print(f'Style file "{self.current_style_file}" not found.')
             return
+        randomize = mode == MODE_RANDOM_ONE
+        all_styles = mode == MODE_GENERATE_IN_ORDER
+        randomize_each = mode == MODE_RANDOM_EACH
 
         style_names: list[str] = style_file.style_names()
         if randomize:

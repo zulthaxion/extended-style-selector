@@ -139,7 +139,7 @@ class ExtendedStyleSelector(scripts.Script):
 
                 gr.HTML(
                     '<span>Info: disable "Dynamic Prompts" extension when using '
-                    '"Generate All Styles In Order" or "Randomize For Each Iteration" option!</span>'
+                    '"Generate All Styles In Order" or "Each Image Has a Random Style" option!</span>'
                 )
                 with FormRow():
                     with FormColumn(min_width=160):
@@ -150,12 +150,12 @@ class ExtendedStyleSelector(scripts.Script):
                     with FormColumn(elem_id="Randomize Style"):
                         randomize = gr.Checkbox(
                             value=False,
-                            label="Randomize Style",
+                            label="One Random Style For All Images",
                         )
                     with FormColumn(elem_id="Randomize For Each Iteration"):
                         randomize_each = gr.Checkbox(
                             value=False,
-                            label="Randomize For Each Iteration",
+                            label="Each Image Has a Random Style",
                         )
 
                 style_files = gr.Dropdown(

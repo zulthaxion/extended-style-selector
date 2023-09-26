@@ -14,6 +14,7 @@ try:
 except ImportError:
     SD_DYNAMIC_PROMPTS_INSTALLED = False
 
+TITLE = "Extended Style Selector"
 DEFAULT_STYLE_FILE = "sd_styles.json"
 DEFAULT_STYLE = "base"
 
@@ -27,24 +28,20 @@ class StyleFile:
 def load_style_files() -> dict[str, StyleFile]:
     style_files = dict()
     for json_path in pathlib.Path(scripts.basedir()).glob("*.json"):
-        json_data = get_json_content(json_path)
+        try:
+            json_data = json.loads(json_path.read_text(encoding="utf-8"))
+        except (IOError, json.JSONDecodeError):
+            print(f'{TITLE}: loading error, file "{json_path}" ignored')
+            continue
+
         style_files[json_path.name] = StyleFile(json_data)
     return style_files
-
-
-def get_json_content(file_path):
-    try:
-        with open(file_path, "rt", encoding="utf-8") as file:
-            json_data = json.load(file)
-            return json_data
-    except Exception as e:
-        print(f"A Problem occurred: {str(e)}")
 
 
 def load_sd_styles(json_data):
     # Check that data is a list
     if not isinstance(json_data, list):
-        print("Error: input data must be a list")
+        print("JSON file structure error: expected a list of styles")
         return None
 
     names = []
@@ -134,7 +131,7 @@ class StyleSelectorXL(scripts.Script):
         super().__init__()
 
     def title(self):
-        return "Extended Style Selector"
+        return TITLE
 
     def show(self, is_img2img):
         return scripts.AlwaysVisible

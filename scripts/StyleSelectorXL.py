@@ -22,7 +22,7 @@ DEFAULT_STYLE = "base"
 class StyleFile:
     def __init__(self, json_data):
         self.json_data = json_data
-        self.style_names: list[str] = load_sd_styles(json_data)
+        self.style_names: list[str] = load_style_names(json_data)
 
 
 def load_style_files() -> dict[str, StyleFile]:
@@ -38,21 +38,18 @@ def load_style_files() -> dict[str, StyleFile]:
     return style_files
 
 
-def load_sd_styles(json_data):
+def load_style_names(json_data) -> list[str]:
+    names = []
     # Check that data is a list
     if not isinstance(json_data, list):
         print("JSON file structure error: expected a list of styles")
-        return None
+        return names
 
-    names = []
-
-    # Iterate over each item in the data list
     for item in json_data:
         # Check that the item is a dictionary
         if isinstance(item, dict):
-            # Check that 'name' is a key in the dictionary
-            if "name" in item:
-                # Append the value of 'name' to the names list
+            name = item.get("name")
+            if name:
                 names.append(item["name"])
     names.sort()
     return names

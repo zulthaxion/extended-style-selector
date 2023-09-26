@@ -113,7 +113,7 @@ class StyleSelectorXL(scripts.Script):
     styleNames = get_styles()
 
     def title(self):
-        return "Style Selector for SDXL 1.0"
+        return "Extended Style Selector"
 
     def show(self, is_img2img):
         return scripts.AlwaysVisible
@@ -121,7 +121,7 @@ class StyleSelectorXL(scripts.Script):
     def ui(self, is_img2img):
         enabled = getattr(shared.opts, "enable_styleselector_by_default", True)
         with gr.Group():
-            with gr.Accordion("SDXL Styles", open=False):
+            with gr.Accordion("Extended Style Selector", open=False):
                 with FormRow():
                     with FormColumn(min_width=160):
                         is_enabled = gr.Checkbox(

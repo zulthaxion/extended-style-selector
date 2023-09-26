@@ -201,36 +201,35 @@ class ExtendedStyleSelector(scripts.Script):
         style_names: list[str] = style_file.style_names()
         if randomize:
             style = random.choice(style_names)
-        batch_count: int = len(p.all_prompts)
 
-        if batch_count == 1:
-            p.all_prompts[0] = style_file.create_positive(style, p.all_prompts[0])
-            p.all_negative_prompts[0] = style_file.create_negative(
-                style, p.all_negative_prompts[0]
+        style_count: int = len(style_names)
+        styles: list[str] = []
+        # generate 'style_count' styles
+        for i, prompt in enumerate(p.all_prompts):
+            if all_styles:
+                styles.append(style_names[i % style_count])
+            elif randomize_each:
+                styles.append(random.choice(style_names))
+            else:
+                styles.append(style)
+
+        # assign generated style to positive prompts
+        for i, prompt in enumerate(p.all_prompts):
+            positive_prompt = style_file.create_positive(
+                styles[i] if randomize_each or all_styles else style,
+                prompt,
             )
-        elif batch_count > 1:
-            style_count: int = len(style_names)
-            styles: list[str] = []
-            for i, prompt in enumerate(p.all_prompts):
-                if all_styles:
-                    styles.append(style_names[i % style_count])
-                elif randomize_each:
-                    styles.append(random.choice(style_names))
-                else:
-                    styles.append(style)
+            p.all_prompts[i] = positive_prompt
 
-            for i, prompt in enumerate(p.all_prompts):
-                positive_prompt = style_file.create_positive(
-                    styles[i] if randomize_each or all_styles else style,
-                    prompt,
-                )
-                p.all_prompts[i] = positive_prompt
-            for i, prompt in enumerate(p.all_negative_prompts):
-                negative_prompt = style_file.create_negative(
-                    styles[i] if randomize_each or all_styles else style,
-                    prompt,
-                )
-                p.all_negative_prompts[i] = negative_prompt
+        # assign generated style to negative prompts
+        for i, prompt in enumerate(p.all_negative_prompts):
+            negative_prompt = style_file.create_negative(
+                styles[i] if randomize_each or all_styles else style,
+                prompt,
+            )
+            p.all_negative_prompts[i] = negative_prompt
+
         if p.enable_hr:
+            # copy prompts for hires.fix
             p.all_hr_prompts = p.all_prompts
             p.all_hr_negative_prompts = p.all_negative_prompts

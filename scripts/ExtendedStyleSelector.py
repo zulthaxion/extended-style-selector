@@ -113,9 +113,6 @@ class ExtendedStyleSelector(scripts.Script):
     style_files: dict[str, StyleFile] = load_style_files()
     current_style_file: str = get_first_style_name(style_files)
 
-    def __init__(self) -> None:
-        super().__init__()
-
     def title(self):
         return TITLE
 

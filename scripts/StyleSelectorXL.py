@@ -112,7 +112,6 @@ class StyleSelectorXL(scripts.Script):
     def __init__(self) -> None:
         super().__init__()
 
-
     def title(self):
         return "Extended Style Selector"
 
@@ -123,12 +122,16 @@ class StyleSelectorXL(scripts.Script):
         enabled = getattr(shared.opts, "enable_styleselector_by_default", True)
         with gr.Group():
             with gr.Accordion("Extended Style Selector", open=False):
+                gr.HTML(
+                    '<span>Info: disable "Dynamic Prompts extension" for all style '
+                    "and randomize each iteration batch  generation!</span>"
+                )
                 with FormRow():
                     with FormColumn(min_width=160):
                         is_enabled = gr.Checkbox(
                             value=enabled,
                             label="Enable Style Selector",
-                            info="enable or disable style selector ",
+                            info="enable or disable style selector",
                         )
                     with FormColumn(elem_id="Randomize Style"):
                         randomize = gr.Checkbox(
@@ -173,7 +176,6 @@ class StyleSelectorXL(scripts.Script):
     def process(self, p, is_enabled, randomize, randomize_each, all_styles, style):
         if not is_enabled:
             return
-
         if randomize:
             style = random.choice(self.style_names)
         batch_count = len(p.all_prompts)
@@ -183,24 +185,25 @@ class StyleSelectorXL(scripts.Script):
             p.all_prompts[0] = create_positive(style, prompt)
             p.all_negative_prompts[0] = create_negative(style, prompt)
         elif batch_count > 1:
-            styles = {}
+            style_count = len(self.style_names)
+            styles = []
             for i, prompt in enumerate(p.all_prompts):
-                if randomize:
-                    styles[i] = random.choice(self.style_names)
-                else:
-                    styles[i] = style
                 if all_styles:
-                    styles[i] = self.style_names[i % len(self.style_names)]
+                    styles.append(self.style_names[i % style_count])
+                elif randomize_each:
+                    styles.append(random.choice(self.style_names))
+                else:
+                    styles.append(style)
 
             # for each image in batch
             for i, prompt in enumerate(p.all_prompts):
                 positive_prompt = create_positive(
-                    styles[i] if randomize_each or all_styles else styles[0], prompt
+                    styles[i] if randomize_each or all_styles else style, prompt
                 )
                 p.all_prompts[i] = positive_prompt
             for i, prompt in enumerate(p.all_negative_prompts):
                 negative_prompt = create_negative(
-                    styles[i] if randomize_each or all_styles else styles[0], prompt
+                    styles[i] if randomize_each or all_styles else style, prompt
                 )
                 p.all_negative_prompts[i] = negative_prompt
 

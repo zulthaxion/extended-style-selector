@@ -171,7 +171,7 @@ class ExtendedStyleSelector(scripts.Script):
                         ],
                         type="value",
                         value=MODE_SELECTED,
-                        label="Batch Mode",
+                        label="Mode",
                         info=f'Hint: disable "Dynamic Prompts" extension when using '
                         f'"{MODE_GENERATE_IN_ORDER}" or "{MODE_RANDOM_EACH}" option!',
                     )

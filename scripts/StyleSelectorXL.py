@@ -1,12 +1,12 @@
 from __future__ import annotations
 from typing import Mapping
 import pathlib
+import json
+import random
 
 import gradio as gr
 from modules import scripts, shared, script_callbacks
 from modules.ui_components import FormRow, FormColumn
-import json
-import random
 
 try:
     import sd_dynamic_prompts
@@ -71,7 +71,7 @@ class StyleFile:
 
 
 def load_style_files() -> dict[str, StyleFile]:
-    style_files = dict()
+    style_files: dict[str, StyleFile] = dict()
     for json_path in pathlib.Path(scripts.basedir()).glob("*.json"):
         try:
             json_data = json.loads(json_path.read_text(encoding="utf-8"))
@@ -125,8 +125,8 @@ class StyleSelectorXL(scripts.Script):
         return self.style_files[self.current_style_file].style_names()
 
     def ui(self, is_img2img):
-        enabled = getattr(shared.opts, "enable_styleselector_by_default", True)
-        style_names = self.current_style_names()
+        enabled: bool = getattr(shared.opts, "enable_styleselector_by_default", True)
+        style_names: list[str] = self.current_style_names()
         with gr.Group():
             with gr.Accordion("Extended Style Selector", open=False):
                 style_file_names = list(self.style_files.keys())
@@ -176,18 +176,18 @@ class StyleSelectorXL(scripts.Script):
                             f"set batch count to {len(style_names)} (style count)",
                         )
 
-                default_style = get_default_style_name(style_names, DEFAULT_STYLE)
-                style_ui_type = shared.opts.data.get("styles_ui", "radio-buttons")
+                default_style_name = get_default_style_name(style_names, DEFAULT_STYLE)
+                style_ui_type: str = shared.opts.data.get("styles_ui", "radio-buttons")
                 if style_ui_type == "select-list":
                     style = gr.Dropdown(
                         style_names,
-                        value=default_style,
+                        value=default_style_name,
                         multiselect=False,
                         label="Select Style",
                     )
                 else:
                     style = gr.Radio(
-                        label="Style", choices=style_names, value=default_style
+                        label="Style", choices=style_names, value=default_style_name
                     )
                 style_files.change(
                     self.on_change_style_file, inputs=[style_files], outputs=[style]
@@ -210,15 +210,15 @@ class StyleSelectorXL(scripts.Script):
     ):
         if not is_enabled:
             return
-        style_file = self.style_files.get(self.current_style_file)
+        style_file: StyleFile = self.style_files.get(self.current_style_file)
         if not style_file:
             print(f'Style file "{self.current_style_file}" not found.')
             return
 
-        style_names = style_file.style_names()
+        style_names: list[str] = style_file.style_names()
         if randomize:
             style = random.choice(style_names)
-        batch_count = len(p.all_prompts)
+        batch_count: int = len(p.all_prompts)
 
         if batch_count == 1:
             p.all_prompts[0] = style_file.create_positive(style, p.all_prompts[0])
@@ -226,8 +226,8 @@ class StyleSelectorXL(scripts.Script):
                 style, p.all_negative_prompts[0]
             )
         elif batch_count > 1:
-            style_count = len(style_names)
-            styles = []
+            style_count: int = len(style_names)
+            styles: list[str] = []
             for i, prompt in enumerate(p.all_prompts):
                 if all_styles:
                     styles.append(style_names[i % style_count])

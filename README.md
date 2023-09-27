@@ -42,7 +42,8 @@ The count of generated images is determined by the batch count.
 
 - to Ali Haydar Güleç for creating the [Style Selector for SDXL 1.0](https://github.com/ahgsql/StyleSelectorXL.git) extension
 - to https://github.com/twri/sdxl_prompt_styler for the original style json files
-- to [Diva](https://civitai.com/user/Diva/models) for the Art Styles Expansion [file](https://civitai.com/models/132426/art-styles-expansion-for-styleselectorxl?modelVersionId=145656)
+- to civitai.com user [Diva](https://civitai.com/user/Diva/models) for [art_styles_expansion.json](https://civitai.com/models/132426/art-styles-expansion-for-styleselectorxl?modelVersionId=145656)
+- to reddit user [wywywywy](https://www.reddit.com/user/wywywywy/) for [clipdrop_styles.json](https://www.reddit.com/r/StableDiffusion/comments/15afvnb/sdxl_various_styles_keywords/)
 
 ### License
 

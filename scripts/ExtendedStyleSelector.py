@@ -232,7 +232,8 @@ class ExtendedStyleSelector(scripts.Script):
             )
             p.all_negative_prompts[i] = negative_prompt
 
-        if p.enable_hr:
+        enable_hr = getattr(p, "enable_hr", False)  # exists only for txt2img
+        if enable_hr:
             # copy prompts for hires.fix
             p.all_hr_prompts = p.all_prompts
             p.all_hr_negative_prompts = p.all_negative_prompts

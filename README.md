@@ -11,7 +11,7 @@ extension works with SDXL as well as with any other Stable Diffusion model (1.5 
 ### Styles
 
 The included style files contain positive and negative prompt templates to generate 
-stylized prompts. The extension can be used in "txt2img" and "img2img" tabs.
+stylized prompts. The extension is available in the "txt2img" and the "img2img" tab.
 
 ### Installation
 
@@ -21,7 +21,7 @@ https://github.com/mozman/ExtendedStyleSelector
 
 ### Usage
 
-Active the extension (default is disabled). 
+Activate the extension (default is disabled). 
 Write your prompts, select a style file and a style then hit generate! 
 The selected style will be applied to your prompts.
 

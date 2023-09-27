@@ -126,37 +126,36 @@ class ExtendedStyleSelector(scripts.Script):
                     else:
                         default_filename = ""
 
-                with FormRow():
-                    with FormColumn(min_width=160):
-                        is_enabled = gr.Checkbox(
-                            value=False,
-                            label="Active",
-                        )
-                style_filename = gr.Dropdown(
-                    choices=style_filenames,
-                    value=default_filename,
-                    type="value",
-                    multiselect=False,
-                    allow_custom_value=False,
-                    interactive=True,
-                    label="Style File",
-                )
-
                 style_names: list[str] = []
                 style_file = self.style_files.get(default_filename)
                 if style_file:
                     style_names = style_file.style_names()
-
                 default_style_name = get_default_style_name(style_names, DEFAULT_STYLE)
-                style_name = gr.Dropdown(
-                    style_names,
-                    value=default_style_name,
-                    type="value",
-                    multiselect=False,
-                    allow_custom_value=False,
-                    interactive=True,
-                    label="Style",
-                )
+
+                with FormRow():
+                    is_enabled = gr.Checkbox(
+                        value=False,
+                        label="Active",
+                    )
+                with FormRow():
+                    style_filename = gr.Dropdown(
+                        choices=style_filenames,
+                        value=default_filename,
+                        type="value",
+                        multiselect=False,
+                        allow_custom_value=False,
+                        interactive=True,
+                        label="Style File",
+                    )
+                    style_name = gr.Dropdown(
+                        style_names,
+                        value=default_style_name,
+                        type="value",
+                        multiselect=False,
+                        allow_custom_value=False,
+                        interactive=True,
+                        label="Style",
+                    )
                 style_filename.change(
                     self.on_change_style_file,
                     inputs=[style_filename],

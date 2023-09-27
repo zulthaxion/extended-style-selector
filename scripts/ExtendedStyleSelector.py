@@ -143,7 +143,7 @@ class ExtendedStyleSelector(scripts.Script):
                             value=False,
                             label="Active",
                         )
-                style_files = gr.Dropdown(
+                style_filename = gr.Dropdown(
                     choices=style_file_names,
                     value=first_file_name,
                     type="value",
@@ -163,8 +163,8 @@ class ExtendedStyleSelector(scripts.Script):
                     interactive=True,
                     label="Style",
                 )
-                style_files.change(
-                    self.on_change_style_file, inputs=[style_files], outputs=[style]
+                style_filename.change(
+                    self.on_change_style_file, inputs=[style_filename], outputs=[style]
                 )
                 with FormRow():
                     mode = gr.Radio(
@@ -181,7 +181,7 @@ class ExtendedStyleSelector(scripts.Script):
                         info=f'Hint: disable "Dynamic Prompts" extension when using '
                         f'"{MODE_RANDOM_EACH}" or "{MODE_GENERATE_IN_ORDER}" option!',
                     )
-        return [is_enabled, mode, style_files, style]
+        return [is_enabled, mode, style_filename, style]
 
     def on_change_style_file(self, file_name: str):
         self.current_style_file = file_name
@@ -193,12 +193,14 @@ class ExtendedStyleSelector(scripts.Script):
             default_style = get_default_style_name(style_names, DEFAULT_STYLE)
         return gr.Dropdown.update(choices=style_names, value=default_style)
 
-    def process(self, p, is_enabled, mode, style_files, style) -> None:
+    def process(
+        self, p, is_enabled: bool, mode: str, style_filename: str, style: str
+    ) -> None:
         if not is_enabled:
             return
-        style_file: StyleFile | None = self.style_files.get(self.current_style_file)
+        style_file: StyleFile | None = self.style_files.get(style_filename)
         if not style_file:
-            print(f'Style file "{self.current_style_file}" not found.')
+            print(f'Style file "{style_filename}" not found.')
             return
         randomize = mode == MODE_RANDOM_ONE
         randomize_each = mode == MODE_RANDOM_EACH

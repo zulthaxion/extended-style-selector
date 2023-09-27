@@ -146,7 +146,10 @@ class ExtendedStyleSelector(scripts.Script):
                 style_files = gr.Dropdown(
                     choices=style_file_names,
                     value=first_file_name,
+                    type="value",
                     multiselect=False,
+                    allow_custom_value=False,
+                    interactive=True,
                     label="Style File",
                 )
                 style_names: list[str] = self.current_style_names()
@@ -154,7 +157,10 @@ class ExtendedStyleSelector(scripts.Script):
                 style = gr.Dropdown(
                     style_names,
                     value=default_style_name,
+                    type="value",
                     multiselect=False,
+                    allow_custom_value=False,
+                    interactive=True,
                     label="Style",
                 )
                 style_files.change(
@@ -170,9 +176,10 @@ class ExtendedStyleSelector(scripts.Script):
                         ],
                         type="value",
                         value=MODE_SELECTED,
+                        interactive=True,
                         label="Mode",
                         info=f'Hint: disable "Dynamic Prompts" extension when using '
-                        f'"{MODE_GENERATE_IN_ORDER}" or "{MODE_RANDOM_EACH}" option!',
+                        f'"{MODE_RANDOM_EACH}" or "{MODE_GENERATE_IN_ORDER}" option!',
                     )
         return [is_enabled, mode, style_files, style]
 
@@ -194,8 +201,8 @@ class ExtendedStyleSelector(scripts.Script):
             print(f'Style file "{self.current_style_file}" not found.')
             return
         randomize = mode == MODE_RANDOM_ONE
-        all_styles = mode == MODE_GENERATE_IN_ORDER
         randomize_each = mode == MODE_RANDOM_EACH
+        all_styles = mode == MODE_GENERATE_IN_ORDER
 
         style_names: list[str] = style_file.style_names()
         if randomize:

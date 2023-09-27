@@ -194,45 +194,35 @@ class ExtendedStyleSelector(scripts.Script):
             return
         style_file = self.style_files.get(style_filename)
         if not style_file:
-            print(f'Style file "{style_filename}" not found.')
             return
-        randomize = mode == MODE_RANDOM_ONE
-        randomize_each = mode == MODE_RANDOM_EACH
-        all_styles = mode == MODE_GENERATE_IN_ORDER
-
         style_names: list[str] = style_file.style_names()
-        if randomize:
-            style = random.choice(style_names)
+        # remove default style "base" for randomization and in-order generation
+        try:
+            style_names.remove(DEFAULT_STYLE)
+        except ValueError:
+            pass
+        style_count = len(style_names)
+        if style_count == 0:
+            return
 
-        style_count: int = len(style_names)
-        styles: list[str] = []
-        # generate 'style_count' styles
-        for i, prompt in enumerate(p.all_prompts):
-            if all_styles:
-                styles.append(style_names[i % style_count])
-            elif randomize_each:
-                styles.append(random.choice(style_names))
-            else:
-                styles.append(style)
+        one_random_style = mode == MODE_RANDOM_ONE
+        randomize_each_prompt = mode == MODE_RANDOM_EACH
+        generate_all_styles = mode == MODE_GENERATE_IN_ORDER
+        if one_random_style or randomize_each_prompt:
+            random.shuffle(style_names)
+        if one_random_style:
+            style = style_names[0]
 
-        # assign generated style to positive prompts
-        for i, prompt in enumerate(p.all_prompts):
-            positive_prompt = style_file.create_positive(
-                styles[i] if randomize_each or all_styles else style,
-                prompt,
-            )
-            p.all_prompts[i] = positive_prompt
+        take_style_from_list = randomize_each_prompt or generate_all_styles
+        for index, (positive, negative) in enumerate(
+            zip(p.all_prompts, p.all_negative_prompts)
+        ):
+            if take_style_from_list:
+                style = style_names[index % style_count]
+            p.all_prompts[index] = style_file.create_positive(style, positive)
+            p.all_negative_prompts[index] = style_file.create_negative(style, negative)
 
-        # assign generated style to negative prompts
-        for i, prompt in enumerate(p.all_negative_prompts):
-            negative_prompt = style_file.create_negative(
-                styles[i] if randomize_each or all_styles else style,
-                prompt,
-            )
-            p.all_negative_prompts[i] = negative_prompt
-
-        enable_hr = getattr(p, "enable_hr", False)  # exists only for txt2img
-        if enable_hr:
-            # copy prompts for hires.fix
+        if getattr(p, "enable_hr", False):  # hires-fix exists only for txt2img
+            # copy prompts for hires-fix
             p.all_hr_prompts = p.all_prompts
             p.all_hr_negative_prompts = p.all_negative_prompts

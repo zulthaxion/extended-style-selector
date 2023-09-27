@@ -1,7 +1,6 @@
 # Copyright (C) 2023, Ali Haydar Güleç
 # License: MIT License
 from __future__ import annotations
-from typing import Mapping
 import pathlib
 import json
 import random
@@ -29,8 +28,8 @@ class Style:
         self.negative_prompt = negative_prompt
 
     @staticmethod
-    def parse(item: Mapping) -> Style:
-        if not isinstance(item, Mapping):
+    def parse(item: dict) -> Style:
+        if not isinstance(item, dict):
             raise TypeError
         return Style(
             name=item.get("name", ""),
@@ -49,7 +48,7 @@ class Style:
 
 
 class StyleFile:
-    def __init__(self, json_data):
+    def __init__(self, json_data) -> None:
         self.styles: dict[str, Style] = load_json_content(json_data)
 
     def style_names(self) -> list[str]:
@@ -83,7 +82,7 @@ def load_style_files() -> dict[str, StyleFile]:
     return style_files
 
 
-def load_json_content(json_data: list[Mapping]) -> dict[str, Style]:
+def load_json_content(json_data: list[dict]) -> dict[str, Style]:
     styles: dict[str, Style] = {}
     if not isinstance(json_data, list):
         raise JSONContentError
@@ -117,10 +116,10 @@ class ExtendedStyleSelector(scripts.Script):
     style_files: dict[str, StyleFile] = load_style_files()
     current_style_file: str = get_first_style_name(style_files)
 
-    def title(self):
+    def title(self) -> str:
         return TITLE
 
-    def show(self, is_img2img):
+    def show(self, is_img2img: bool):
         return scripts.AlwaysVisible
 
     def current_style_names(self) -> list[str]:
@@ -129,7 +128,7 @@ class ExtendedStyleSelector(scripts.Script):
             return style_file.style_names()
         return []
 
-    def ui(self, is_img2img):
+    def ui(self, is_img2img: bool):
         with gr.Group():
             with gr.Accordion("Extended Style Selector", open=False):
                 style_file_names = list(self.style_files.keys())
@@ -177,20 +176,20 @@ class ExtendedStyleSelector(scripts.Script):
                     )
         return [is_enabled, mode, style_files, style]
 
-    def on_change_style_file(self, file_name):
+    def on_change_style_file(self, file_name: str):
         self.current_style_file = file_name
         style_names: list[str] = []
         default_style: str = ""
-        style_file: StyleFile = self.style_files.get(file_name)
+        style_file: StyleFile | None = self.style_files.get(file_name)
         if style_file:
             style_names = style_file.style_names()
             default_style = get_default_style_name(style_names, DEFAULT_STYLE)
         return gr.Dropdown.update(choices=style_names, value=default_style)
 
-    def process(self, p, is_enabled, mode, style_files, style):
+    def process(self, p, is_enabled, mode, style_files, style) -> None:
         if not is_enabled:
             return
-        style_file: StyleFile = self.style_files.get(self.current_style_file)
+        style_file: StyleFile | None = self.style_files.get(self.current_style_file)
         if not style_file:
             print(f'Style file "{self.current_style_file}" not found.')
             return

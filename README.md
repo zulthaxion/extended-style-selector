@@ -17,7 +17,7 @@ stylized prompts. The extension is available in the "txt2img" and the "img2img" 
 
 Enter this repo's URL in Automatic1111's extension tab "Install from Url":
 
-https://github.com/mozman/ExtendedStyleSelector
+https://github.com/mozman/extended-style-selector
 
 ### Usage
 

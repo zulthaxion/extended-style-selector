@@ -7,7 +7,7 @@ import random
 
 import gradio as gr
 from modules import scripts
-from modules.ui_components import FormRow, FormColumn
+from modules.ui_components import FormRow
 
 TITLE = "Extended Style Selector"
 DEFAULT_STYLE = "base"

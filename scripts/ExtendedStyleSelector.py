@@ -105,28 +105,14 @@ def get_default_style_name(style_names: list[str], default_style: str) -> str:
     return default_style
 
 
-def get_first_style_name(style_files) -> str:
-    try:
-        return list(style_files.keys())[0]
-    except IndexError:
-        return ""
-
-
 class ExtendedStyleSelector(scripts.Script):
     style_files: dict[str, StyleFile] = load_style_files()
-    current_style_file: str = get_first_style_name(style_files)
 
     def title(self) -> str:
         return TITLE
 
     def show(self, is_img2img: bool):
         return scripts.AlwaysVisible
-
-    def current_style_names(self) -> list[str]:
-        style_file = self.style_files.get(self.current_style_file)
-        if style_file:
-            return style_file.style_names()
-        return []
 
     def ui(self, is_img2img: bool):
         with gr.Group():
@@ -152,7 +138,12 @@ class ExtendedStyleSelector(scripts.Script):
                     interactive=True,
                     label="Style File",
                 )
-                style_names: list[str] = self.current_style_names()
+
+                style_names: list[str] = []
+                style_file = self.style_files.get(first_file_name)
+                if style_file:
+                    style_names = style_file.style_names()
+
                 default_style_name = get_default_style_name(style_names, DEFAULT_STYLE)
                 style = gr.Dropdown(
                     style_names,
@@ -184,10 +175,9 @@ class ExtendedStyleSelector(scripts.Script):
         return [is_enabled, mode, style_filename, style]
 
     def on_change_style_file(self, file_name: str):
-        self.current_style_file = file_name
         style_names: list[str] = []
         default_style: str = ""
-        style_file: StyleFile | None = self.style_files.get(file_name)
+        style_file = self.style_files.get(file_name)
         if style_file:
             style_names = style_file.style_names()
             default_style = get_default_style_name(style_names, DEFAULT_STYLE)
@@ -198,7 +188,7 @@ class ExtendedStyleSelector(scripts.Script):
     ) -> None:
         if not is_enabled:
             return
-        style_file: StyleFile | None = self.style_files.get(style_filename)
+        style_file = self.style_files.get(style_filename)
         if not style_file:
             print(f'Style file "{style_filename}" not found.')
             return

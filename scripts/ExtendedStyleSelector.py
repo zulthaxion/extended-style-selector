@@ -11,6 +11,7 @@ from modules.ui_components import FormRow, FormColumn
 
 TITLE = "Extended Style Selector"
 DEFAULT_STYLE = "base"
+DEFAULT_STYLE_FILE = "sdxl_styles.json"
 MODE_SELECTED = "Selected Style For All Images"
 MODE_RANDOM_ONE = "One Random Style For All Images"
 MODE_RANDOM_EACH = "Random Style For Each Image"
@@ -117,11 +118,13 @@ class ExtendedStyleSelector(scripts.Script):
     def ui(self, is_img2img: bool):
         with gr.Group():
             with gr.Accordion("Extended Style Selector", open=False):
-                style_file_names = list(self.style_files.keys())
-                try:
-                    first_file_name = style_file_names[0]
-                except IndexError:
-                    first_file_name = ""
+                style_filenames: list[str] = sorted(self.style_files.keys())
+                default_filename = DEFAULT_STYLE_FILE
+                if default_filename not in style_filenames:
+                    if style_filenames:
+                        default_filename = style_filenames[0]
+                    else:
+                        default_filename = ""
 
                 with FormRow():
                     with FormColumn(min_width=160):
@@ -130,8 +133,8 @@ class ExtendedStyleSelector(scripts.Script):
                             label="Active",
                         )
                 style_filename = gr.Dropdown(
-                    choices=style_file_names,
-                    value=first_file_name,
+                    choices=style_filenames,
+                    value=default_filename,
                     type="value",
                     multiselect=False,
                     allow_custom_value=False,
@@ -140,12 +143,12 @@ class ExtendedStyleSelector(scripts.Script):
                 )
 
                 style_names: list[str] = []
-                style_file = self.style_files.get(first_file_name)
+                style_file = self.style_files.get(default_filename)
                 if style_file:
                     style_names = style_file.style_names()
 
                 default_style_name = get_default_style_name(style_names, DEFAULT_STYLE)
-                style = gr.Dropdown(
+                style_name = gr.Dropdown(
                     style_names,
                     value=default_style_name,
                     type="value",
@@ -155,7 +158,9 @@ class ExtendedStyleSelector(scripts.Script):
                     label="Style",
                 )
                 style_filename.change(
-                    self.on_change_style_file, inputs=[style_filename], outputs=[style]
+                    self.on_change_style_file,
+                    inputs=[style_filename],
+                    outputs=[style_name],
                 )
                 with FormRow():
                     mode = gr.Radio(
@@ -172,12 +177,12 @@ class ExtendedStyleSelector(scripts.Script):
                         info=f'Hint: disable "Dynamic Prompts" extension when using '
                         f'"{MODE_RANDOM_EACH}" or "{MODE_GENERATE_IN_ORDER}" option!',
                     )
-        return [is_enabled, mode, style_filename, style]
+        return [is_enabled, mode, style_filename, style_name]
 
-    def on_change_style_file(self, file_name: str):
+    def on_change_style_file(self, filename: str):
         style_names: list[str] = []
         default_style: str = ""
-        style_file = self.style_files.get(file_name)
+        style_file = self.style_files.get(filename)
         if style_file:
             style_names = style_file.style_names()
             default_style = get_default_style_name(style_names, DEFAULT_STYLE)

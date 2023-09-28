@@ -21,9 +21,9 @@ https://github.com/mozman/extended-style-selector
 
 ### Usage
 
-The extension is active when open and in active when closed like the "Hires. Fix" 
-and "Refiner" options.  Write your prompts, select a style file and a style then hit 
-generate!  The selected style will be applied to your prompts.
+The extension is enabled when the options panel is open and disabled when the panel is 
+closed like the "Hires. Fix" and "Refiner" options.  Write your prompts, select a style 
+file and a style then hit generate!  The selected style will be applied to your prompts.
 
 ### Modes
 

@@ -7,7 +7,7 @@ import random
 
 import gradio as gr
 from modules import scripts
-from modules.ui_components import FormRow
+from modules.ui_components import FormRow, InputAccordion
 
 TITLE = "Extended Style Selector"
 DEFAULT_STYLE = "base"
@@ -117,7 +117,7 @@ class ExtendedStyleSelector(scripts.Script):
 
     def ui(self, is_img2img: bool):
         with gr.Group():
-            with gr.Accordion("Extended Style Selector", open=False):
+            with InputAccordion(False, label="Extended Style Selector") as is_enabled:
                 style_filenames: list[str] = sorted(self.style_files.keys())
                 default_filename = DEFAULT_STYLE_FILE
                 if default_filename not in style_filenames:
@@ -132,11 +132,6 @@ class ExtendedStyleSelector(scripts.Script):
                     style_names = style_file.style_names()
                 default_style_name = get_default_style_name(style_names, DEFAULT_STYLE)
 
-                with FormRow():
-                    is_enabled = gr.Checkbox(
-                        value=False,
-                        label="Active",
-                    )
                 with FormRow():
                     style_filename = gr.Dropdown(
                         choices=style_filenames,

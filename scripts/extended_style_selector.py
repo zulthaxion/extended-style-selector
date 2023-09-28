@@ -117,7 +117,7 @@ class ExtendedStyleSelector(scripts.Script):
 
     def ui(self, is_img2img: bool):
         with gr.Group():
-            with InputAccordion(False, label="Extended Style Selector") as is_enabled:
+            with InputAccordion(False, label=self.title()) as is_enabled:
                 style_filenames: list[str] = sorted(self.style_files.keys())
                 default_filename = DEFAULT_STYLE_FILE
                 if default_filename not in style_filenames:

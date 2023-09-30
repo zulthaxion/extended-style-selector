@@ -1,0 +1,42 @@
+[
+    {
+        "name": "base",
+        "prompt": "{prompt}",
+        "negative_prompt": ""
+    },
+    {
+        "name": "Architecture Blueprint",
+        "prompt": "(floor plan: 1.1) architectural sketch style {prompt} . blueprint, oblique, draft, grayscale, flat, scale bars, monochromatic, annotation, hatching",
+        "negative_prompt": " photo, messy, 3d, isometric, perspective"
+    },
+    {
+        "name": "Architecture Isometric Pencil Sketch",
+        "prompt": "(isometric: 1.1) architectural sketch style {prompt} . blueprint style, draft, hand-drawn, grayscale, flat, monochromatic, hatching",
+        "negative_prompt": "photo, realistic, messy, 3d model, hand, pencil, watermark"
+    },
+    {
+        "name": "Architecture Isometric Watercolor Sketch",
+        "prompt": "(isometric: 1.1) architectural sketch style {prompt} . draft, hand-drawn, watercolor, flat, hatching",
+        "negative_prompt": "photo, messy, 3d model, hand, pencil, watermark"
+    },
+    {
+        "name": "Architecture Presentation",
+        "prompt": "high-quality architecture presentation {prompt} . 3D rendering, CAD, Octane renderer, 8k",
+        "negative_prompt": "messy, sketch, watermark, hand-drawn, doodles"
+    },
+    {
+        "name": "Landscape Plan",
+        "prompt": "sketch style landscape plan, (site analysis:1.2), {prompt} (plan view:1.2), draft, hand-drawn, flat, hatching",
+        "negative_prompt": "pencil, hand, messy, 3D model, photo, realistic, brush, isometric, perpective, text"
+    },
+    {
+        "name": "Mechanical Sketch",
+        "prompt": "sketch style mechanical drawing {prompt} . technical documentation, flat, greyscale, hatching, annotation",
+        "negative_prompt": "photo, realistic, messy, 3d model, hand, pencil, watermark, isometric"
+    },    
+	{
+        "name": "Mechanical CAD",
+        "prompt": "mechanical drawing style {prompt}. exploded drawing, technical documentation, CAD, monochromatic",
+        "negative_prompt": "messy, hand, pencil, watermark"
+    }
+]

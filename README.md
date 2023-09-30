@@ -1,12 +1,12 @@
 ## Extended Style Selector
 
 This repository contains an Automatic1111 extension that applies styles to 
-the input prompts. The Styles are stored in one or multiple JSON files in the 
-extension directory.
+the input prompts.
 
 This extension is a fork of [Style Selector for SDXL 1.0](https://github.com/ahgsql/StyleSelectorXL.git) 
 by Ali Haydar Güleç. The extension was renamed to "Extended Style Selector" because the 
 extension works with SDXL as well as with any other Stable Diffusion model (1.5 & 2.1). 
+The forked extension supports multiple style files stored in the extension folder.
 
 ### Styles
 
